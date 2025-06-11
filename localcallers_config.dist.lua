@@ -219,23 +219,24 @@
     clothingConfig = {
         -- Array of clothing items that will be whitelisted from triggering 911 calls
         whiteList = {
+            -- Full ped model whitelist
             {
-                component = 8, -- Component ID for tops
-                drawable = 0, -- Drawable ID for the item
-                textures = {0} -- Texture ID for the item
+                ped = "s_m_y_cop_01"
             },
+
+            -- Global clothing whitelist (applies to all peds)
             {
-                component = 3, -- Component ID for torsos
-                drawable = 0, -- Drawable ID for the item
-                textures = {0} -- Texture ID for the item
+                component = 8,
+                drawable = 284,
+                textures = {0}
             },
+
+            -- Ped-specific clothing whitelist
             {
-                component = 4, -- Component ID for pants
-                drawable = 0, -- Drawable ID for the item
-                textures = {0} -- Texture ID for the item
-            },
-            {
-                ped = 's_m_y_cop_01', -- Ped model for police
+                ped = "mp_m_freemode_01",
+                component = 8,
+                drawable = 148,
+                textures = {2, 4}
             }
         },
         -- ======================

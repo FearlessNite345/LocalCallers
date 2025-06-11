@@ -221,13 +221,16 @@ CreateThread(function()
                 local pedModel = GetEntityModel(ped)
 
                 for _, entry in ipairs(pluginConfig.clothingConfig.whiteList) do
-                    -- Allow based on exact ped model
-                    if entry.ped and pedModel == GetHashKey(entry.ped) then
+                    local pedHash = entry.ped and GetHashKey(entry.ped)
+
+                    -- 1. Ped model-wide whitelist (ignore clothes)
+                    if entry.ped and not entry.component and pedModel == pedHash then
+                        debugLog("Ped model fully whitelisted: " .. entry.ped)
                         return true
                     end
 
-                    -- Allow based on clothing configuration
-                    if entry.component and entry.drawable and entry.textures then
+                    -- 2. Clothing whitelist (applies to all peds)
+                    if entry.component and not entry.ped then
                         local comp = entry.component
                         local draw = GetPedDrawableVariation(ped, comp)
                         local tex = GetPedTextureVariation(ped, comp)
@@ -235,13 +238,29 @@ CreateThread(function()
                         if draw == entry.drawable then
                             for _, allowedTex in ipairs(entry.textures) do
                                 if tex == allowedTex then
+                                    debugLog("Global clothing match: comp " .. comp .. " drawable " .. draw .. " texture " .. tex)
+                                    return true
+                                end
+                            end
+                        end
+                    end
+
+                    -- 3. Clothing whitelist for specific ped models
+                    if entry.component and entry.ped and pedModel == pedHash then
+                        local comp = entry.component
+                        local draw = GetPedDrawableVariation(ped, comp)
+                        local tex = GetPedTextureVariation(ped, comp)
+
+                        if draw == entry.drawable then
+                            for _, allowedTex in ipairs(entry.textures) do
+                                if tex == allowedTex then
+                                    debugLog("Ped-specific clothing match for " .. entry.ped .. ": comp " .. comp .. " drawable " .. draw .. " texture " .. tex)
                                     return true
                                 end
                             end
                         end
                     end
                 end
-
                 return false
             end
 
