@@ -8,184 +8,12 @@ CreateThread(function()
     Config.LoadPlugin("localcallers", function(pluginConfig)
         if pluginConfig.enabled then
             local lastCallEndTime  = 0    -- tracks when the most recent call finished
-            local callTemplates = {
-                pistol = {
-                    "Someone is waving a handgun around near %s! I think it's a %s!",
-                    "There's a guy showing off a pistol on %s! %s!",
-                    "Help! I just saw someone flashing a pistol on %s. %s.",
-                    "Looks like a handgun on %s. %s!",
-                    "They're brandishing a pistol openly at %s. %s!",
-                    "I’m scared. There’s someone with a small gun on %s. %s.",
-                    "A handgun! I saw a %s on %s!",
-                    "They've got a sidearm on %s, just flashing it around. %s.",
-                    "Looks like a concealed pistol being shown on %s. %s.",
-                    "Man with a pistol spotted near %s! %s!"
-                },
-                knife = {
-                    "Someone's got a knife out on %s! %s!",
-                    "There’s a person waving a blade around on %s! %s!",
-                    "Looks like a knife! They're on %s. %s.",
-                    "Dangerous looking guy with a knife near %s! %s.",
-                    "He's swinging a knife around %s. %s!",
-                    "This guy has a knife in his hand on %s. %s!",
-                    "They're brandishing a blade at %s. %s.",
-                    "Knife-wielding person spotted on %s! %s!",
-                    "They're acting threatening with a knife at %s. %s.",
-                    "I think they’ve got a knife at %s! %s!"
-                },
-                longgun = {
-                    "Someone’s got a rifle out on %s! %s!",
-                    "He’s walking around with a long gun on %s. %s.",
-                    "There’s a guy carrying a rifle down %s. %s!",
-                    "I saw a scoped rifle on %s! %s.",
-                    "That looks like an assault weapon on %s! %s.",
-                    "Rifle spotted near %s! %s.",
-                    "Man with a long weapon walking near %s! %s.",
-                    "They're carrying something like a sniper on %s. %s!",
-                    "Definitely a long gun, I saw it near %s. %s!",
-                    "They’ve got a rifle out on %s. %s!"
-                },
-                shotgun = {
-                    "He’s carrying a shotgun down %s! %s!",
-                    "There’s a person with a pump-action shotgun on %s! %s.",
-                    "I just saw someone with a shotgun at %s. %s.",
-                    "Sawed-off or not, it’s a shotgun on %s! %s!",
-                    "Someone with a 12-gauge at %s. %s!",
-                    "That looked like a shotgun being carried on %s. %s.",
-                    "Openly carrying a shotgun down %s! %s.",
-                    "They’ve got a big shotgun out on %s! %s!",
-                    "I’m sure it’s a shotgun – on %s! %s.",
-                    "Shotgun-wielding person walking down %s. %s!"
-                },
-                smg = {
-                    "Someone’s flashing a submachine gun on %s! %s!",
-                    "They're carrying a compact SMG on %s. %s!",
-                    "That looked like an SMG on %s. %s!",
-                    "Small automatic weapon spotted on %s! %s!",
-                    "He’s got a machine pistol on %s. %s!",
-                    "They're holding something like a Uzi at %s! %s!",
-                    "I swear that was a mini-SMG at %s. %s!",
-                    "Rapid-fire gun seen on %s! %s!",
-                    "Someone’s armed with an SMG on %s. %s!",
-                    "Automatic weapon sighting on %s! %s!"
-                },
-                sniper = {
-                    "I saw someone with a sniper rifle on %s! %s!",
-                    "There’s a long-range weapon on %s. %s!",
-                    "Scoped rifle spotted near %s! %s!",
-                    "They’ve got a sniper on %s. %s!",
-                    "Sniper-type weapon seen at %s! %s!",
-                    "Someone’s aiming something big on %s. %s!",
-                    "That's a sniper rifle near %s! %s!",
-                    "It looked like a precision weapon on %s. %s!",
-                    "Sniper spotted at %s! %s!",
-                    "Someone’s lining up shots at %s. %s!"
-                },
-                melee = {
-                    "There’s someone swinging a bat on %s! %s!",
-                    "They’re holding a melee weapon on %s. %s!",
-                    "Looks like a crowbar or something at %s! %s!",
-                    "He’s threatening folks with a wrench on %s. %s!",
-                    "That guy has a hammer on %s! %s!",
-                    "There’s a person with a club at %s! %s!",
-                    "He’s got something blunt on %s. %s!",
-                    "Looks like a flashlight used as a weapon at %s! %s!",
-                    "They’re ready to swing something on %s. %s!",
-                    "Blunt weapon spotted on %s! %s!"
-                },
-                heavy = {
-                    "There's a guy with a rocket launcher on %s! %s!",
-                    "Heavy weapon spotted at %s. %s!",
-                    "That looked like a minigun near %s! %s!",
-                    "Big launcher spotted on %s. %s!",
-                    "He’s carrying military-grade stuff on %s! %s!",
-                    "I swear I saw a railgun on %s. %s!",
-                    "That’s a heavy-duty launcher at %s! %s!",
-                    "Huge weapon on display at %s. %s!",
-                    "Massive firepower seen near %s! %s!",
-                    "There’s someone armed to the teeth on %s. %s!"
-                },
-                explosive = {
-                    "Someone just pulled out a grenade on %s! %s!",
-                    "Explosives sighted at %s! %s!",
-                    "They’ve got a molotov on %s. %s!",
-                    "Sticky bomb spotted near %s! %s!",
-                    "Looks like they’ve got a pipe bomb at %s! %s!",
-                    "Person is holding an explosive on %s. %s!",
-                    "They’ve got some kind of bomb at %s! %s!",
-                    "Looks like tear gas or something worse on %s! %s!",
-                    "That guy’s got an explosive device at %s. %s!",
-                    "That’s not safe! Explosive spotted on %s! %s!"
-                },
-                throwable = {
-                    "They’ve got something in their hand—maybe a flare—on %s. %s!",
-                    "Someone’s throwing snowballs on %s! %s!",
-                    "I think I saw a ball fly past on %s. %s!",
-                    "That looked like something tossed on %s! %s!",
-                    "He’s throwing random stuff on %s. %s!",
-                    "Could be a distraction—something just flew on %s! %s!",
-                    "They’re throwing stuff! On %s! %s!",
-                    "Tossed something on %s! %s!",
-                    "Object thrown at someone on %s. %s!",
-                    "Suspicious object thrown on %s! %s!"
-                },
-                fire = {
-                    "Someone’s spraying something flammable on %s! %s!",
-                    "Fire extinguisher used on %s—don’t know why! %s!",
-                    "They’ve got a gas can out on %s. %s!",
-                    "They’re pouring fuel at %s! %s!",
-                    "Potential arsonist on %s! %s!",
-                    "Flammable liquid being poured near %s! %s!",
-                    "That’s a petrol can at %s! %s!",
-                    "I think they’re starting a fire at %s. %s!",
-                    "They’re holding some fire hazard at %s. %s!",
-                    "Fire-related activity spotted on %s! %s!"
-                },
-                fighting = {
-                    "There’s a brawl on %s! %s!",
-                    "Two people are fighting at %s! %s!",
-                    "I just saw someone getting punched on %s. %s!",
-                    "Big fight going down on %s! %s!",
-                    "They're in a fistfight on %s! %s!",
-                    "Physical altercation on %s! %s!",
-                    "They’re beating each other up on %s. %s!",
-                    "Some sort of street fight at %s! %s!",
-                    "They're swinging at each other on %s! %s!",
-                    "Crazy fight happening near %s! %s!"
-                },
-                carjacking = {
-                    "Someone’s stealing a car on %s! %s!",
-                    "There’s a person forcing someone out of their car at %s! %s!",
-                    "Looks like a carjacking! They're at %s. %s.",
-                    "Dangerous looking person jacking a car near %s! %s.",
-                    "They're dragging someone out of their car on %s. %s!",
-                    "This person’s armed and stealing a car on %s. %s!",
-                    "They're taking off with someone’s vehicle at %s. %s.",
-                    "Saw a violent carjacking happening on %s! %s!",
-                    "They're hijacking a car at %s. %s.",
-                    "I think they're stealing that car on %s! %s!"
-                },
-                playerDied = {
-                    "Someone just collapsed on %s! %s!",
-                    "There’s a body lying still on %s! %s!",
-                    "I think someone just died at %s. %s.",
-                    "They're not moving near %s! %s.",
-                    "I just saw someone go down on %s. %s!",
-                    "It looks like a person was killed at %s. %s!",
-                    "There’s a dead body on %s. %s.",
-                    "They were attacked and now they’re down on %s! %s!",
-                    "Somebody’s unresponsive on %s. %s.",
-                    "I think someone was murdered on %s! %s!"
-                }
-            }
-
             local activeCalls = {}
             -- Get the street name at these coords
             function getStreetName(coords)
                 local streetHash, _ = GetStreetNameAtCoord(coords.x, coords.y, coords.z)
                 return GetStreetNameFromHashKey(streetHash)
             end
-
             -- Play the phone-call emote + attach a phone prop
             function playCallEmote(ped)
                 RequestAnimDict("cellphone@")
@@ -309,16 +137,16 @@ CreateThread(function()
             -- Returns two strings: itemName and colorName (or “Unknown …” if not found).
             local function lookupClothing(compTable, compID, texID)
                 if not compTable or type(compID) ~= "number" or type(texID) ~= "number" then
-                    return "Unknown Item", "Unknown Color"
+                    return pluginConfig.language.unknownItem, pluginConfig.language.unknownColor
                 end
 
                 local drawableEntry = compTable[compID]
                 if not drawableEntry then
-                    return "Unknown Item", "Unknown Color"
+                    return pluginConfig.language.unknownItem, pluginConfig.language.unknownColor
                 end
 
-                local itemName = drawableEntry.name or "Unknown Item"
-                local colorName = "Unknown Color"
+                local itemName = drawableEntry.name or pluginConfig.language.unknownItem
+                local colorName = pluginConfig.language.unknownColor
                 if drawableEntry.colors and drawableEntry.colors[texID] then
                     colorName = drawableEntry.colors[texID]
                 end
@@ -330,12 +158,11 @@ CreateThread(function()
             -- “Male, T-Shirt (Red), Leather Jacket (Black), Jeans (Blue), Sneakers (White)”
             function getPlayerDescription(ped)
                 if not DoesEntityExist(ped) then
-                    return "Unknown"
+                    return pluginConfig.language.unknown
                 end
 
                 -- 1) Gender
-                local gender = IsPedMale(ped) and "Male" or "Female"
-
+                local gender = IsPedMale(ped) and pluginConfig.language.male or pluginConfig.language.female
                 -- 2) Top (component 8)
                 local topDraw = GetPedDrawableVariation(ped, 8)
                 local topTex  = GetPedTextureVariation(ped,    8)
@@ -376,13 +203,18 @@ CreateThread(function()
 
             -- Pick a random template, fill in street + description
             function getRandomCallMessage(actionType, street, description)
-                local templates = callTemplates[actionType]
+                local templates = pluginConfig.language.callTemplates[actionType]
                 if not templates then
                     -- Fallback if we have no entry for this actionType
-                    return string.format("911! I saw someone acting suspicious on %s. %s", street, description)
+                    return ("911! I saw someone acting suspicious on {street}. {description}")
+                        :gsub("{street}", street)
+                        :gsub("{description}", description)
                 end
+
                 local chosen = templates[math.random(1, #templates)]
-                return string.format(chosen, street, description)
+                return chosen
+                    :gsub("{street}", street)
+                    :gsub("{description}", description)
             end
             -- Helper function: returns true if `ped` is wearing ANY of the whitelisted items
             local function isPedWhitelisted(ped)
@@ -471,8 +303,12 @@ CreateThread(function()
                     local percent = math.min(elapsed / duration, 1.0)
                     local cutoff = math.floor(#fullMessage * percent)
                     local partialMessage = string.sub(fullMessage, 1, cutoff)
+                    if callAborted then
+                        debugLog("AI Call Aborted: " .. partialMessage)
+                        partialMessage = partialMessage .. pluginConfig.language.callDropped
+                    end
                     debugLog("AI Call Message: " .. partialMessage)
-                    TriggerServerEvent('SonoranCAD::callcommands:SendCallApi', true, 'Bystander', street, partialMessage, PlayerPedId(), false, true)
+                    TriggerServerEvent('SonoranCAD::callcommands:SendCallApi', true, pluginConfig.language.caller, street, pluginConfig.language.callerStates .. partialMessage, PlayerPedId(), false, true)
                     lastCallEndTime = GetGameTimer()
                     activeCalls[aiPed] = nil
                 end)

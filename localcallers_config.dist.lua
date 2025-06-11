@@ -35,6 +35,187 @@
             whitelistTypes = {} -- nothing gets reported here
         }
     },
+    language = {
+        -- Language configuration
+        callerStates = "Caller States: ",
+        callDropped = " - Call was dropped mid statement. Could not reach the caller or verify the situation. Responding units proceed with caution.",
+        unknownItem = "Unknown Item",
+        unknownColor = "Unknown Color",
+        unknown = "Unknown",
+        male = "Male",
+        female = "Female",
+        caller = "Bystander", -- Default caller type
+        callTemplates = { -- Templates for different call types | Place holders: {street} and {description}
+            pistol = {
+                "Someone is waving a handgun around near {street}! I think it's a {description}!",
+                "There's a guy showing off a pistol on {street}! {description}!",
+                "Help! I just saw someone flashing a pistol on {street}. {description}.",
+                "Looks like a handgun on {street}. {description}!",
+                "They're brandishing a pistol openly at {street}. {description}!",
+                "I’m scared. There’s someone with a small gun on {street}. {description}.",
+                "A handgun! I saw a {description} on {street}!",
+                "They've got a sidearm on {street}, just flashing it around. {description}.",
+                "Looks like a concealed pistol being shown on {street}. {description}.",
+                "Man with a pistol spotted near {street}! {description}!"
+            },
+            knife = {
+                "Someone's got a knife out on {street}! {description}!",
+                "There’s a person waving a blade around on {street}! {description}!",
+                "Looks like a knife! They're on {street}. {description}.",
+                "Dangerous looking guy with a knife near {street}! {description}.",
+                "He's swinging a knife around {street}. {description}!",
+                "This guy has a knife in his hand on {street}. {description}!",
+                "They're brandishing a blade at {street}. {description}.",
+                "Knife-wielding person spotted on {street}! {description}!",
+                "They're acting threatening with a knife at {street}. {description}.",
+                "I think they’ve got a knife at {street}! {description}!"
+            },
+            longgun = {
+                "Someone’s got a rifle out on {street}! {description}!",
+                "He’s walking around with a long gun on {street}. {description}.",
+                "There’s a guy carrying a rifle down {street}. {description}!",
+                "I saw a scoped rifle on {street}! {description}.",
+                "That looks like an assault weapon on {street}! {description}.",
+                "Rifle spotted near {street}! {description}.",
+                "Man with a long weapon walking near {street}! {description}.",
+                "They're carrying something like a sniper on {street}. {description}!",
+                "Definitely a long gun, I saw it near {street}. {description}!",
+                "They’ve got a rifle out on {street}. {description}!"
+            },
+            shotgun = {
+                "He’s carrying a shotgun down {street}! {description}!",
+                "There’s a person with a pump-action shotgun on {street}! {description}.",
+                "I just saw someone with a shotgun at {street}. {description}.",
+                "Sawed-off or not, it’s a shotgun on {street}! {description}!",
+                "Someone with a 12-gauge at {street}. {description}!",
+                "That looked like a shotgun being carried on {street}. {description}.",
+                "Openly carrying a shotgun down {street}! {description}.",
+                "They’ve got a big shotgun out on {street}! {description}!",
+                "I’m sure it’s a shotgun – on {street}! {description}.",
+                "Shotgun-wielding person walking down {street}. {description}!"
+            },
+            smg = {
+                "Someone’s flashing a submachine gun on {street}! {description}!",
+                "They're carrying a compact SMG on {street}. {description}.",
+                "That looked like an SMG on {street}. {description}!",
+                "Small automatic weapon spotted on {street}! {description}!",
+                "He’s got a machine pistol on {street}. {description}!",
+                "They're holding something like a Uzi at {street}! {description}!",
+                "I swear that was a mini-SMG at {street}. {description}!",
+                "Rapid-fire gun seen on {street}! {description}!",
+                "Someone’s armed with an SMG on {street}. {description}!",
+                "Automatic weapon sighting on {street}! {description}!"
+            },
+            sniper = {
+                "I saw someone with a sniper rifle on {street}! {description}!",
+                "There’s a long-range weapon on {street}. {description}!",
+                "Scoped rifle spotted near {street}! {description}!",
+                "They’ve got a sniper on {street}. {description}!",
+                "Sniper-type weapon seen at {street}! {description}!",
+                "Someone’s aiming something big on {street}. {description}!",
+                "That's a sniper rifle near {street}! {description}!",
+                "It looked like a precision weapon on {street}. {description}!",
+                "Sniper spotted at {street}! {description}!",
+                "Someone’s lining up shots at {street}. {description}!"
+            },
+            melee = {
+                "There’s someone swinging a bat on {street}! {description}!",
+                "They’re holding a melee weapon on {street}. {description}!",
+                "Looks like a crowbar or something at {street}! {description}!",
+                "He’s threatening folks with a wrench on {street}. {description}!",
+                "That guy has a hammer on {street}! {description}!",
+                "There’s a person with a club at {street}! {description}!",
+                "He’s got something blunt on {street}. {description}!",
+                "Looks like a flashlight used as a weapon at {street}! {description}!",
+                "They’re ready to swing something on {street}. {description}!",
+                "Blunt weapon spotted on {street}! {description}!"
+            },
+            heavy = {
+                "There's a guy with a rocket launcher on {street}! {description}!",
+                "Heavy weapon spotted at {street}. {description}!",
+                "That looked like a minigun near {street}! {description}!",
+                "Big launcher spotted on {street}. {description}!",
+                "He’s carrying military-grade stuff on {street}! {description}!",
+                "I swear I saw a railgun on {street}. {description}!",
+                "That’s a heavy-duty launcher at {street}! {description}!",
+                "Huge weapon on display at {street}. {description}!",
+                "Massive firepower seen near {street}! {description}!",
+                "There’s someone armed to the teeth on {street}. {description}!"
+            },
+            explosive = {
+                "Someone just pulled out a grenade on {street}! {description}!",
+                "Explosives sighted at {street}! {description}!",
+                "They’ve got a molotov on {street}. {description}!",
+                "Sticky bomb spotted near {street}! {description}!",
+                "Looks like they’ve got a pipe bomb at {street}! {description}!",
+                "Person is holding an explosive on {street}. {description}!",
+                "They’ve got some kind of bomb at {street}! {description}!",
+                "Looks like tear gas or something worse on {street}! {description}!",
+                "That guy’s got an explosive device at {street}. {description}!",
+                "That’s not safe! Explosive spotted on {street}! {description}!"
+            },
+            throwable = {
+                "They’ve got something in their hand—maybe a flare—on {street}. {description}!",
+                "Someone’s throwing snowballs on {street}! {description}!",
+                "I think I saw a ball fly past on {street}. {description}!",
+                "That looked like something tossed on {street}! {description}!",
+                "He’s throwing random stuff on {street}. {description}!",
+                "Could be a distraction—something just flew on {street}! {description}!",
+                "They’re throwing stuff! On {street}! {description}!",
+                "Tossed something on {street}! {description}!",
+                "Object thrown at someone on {street}. {description}!",
+                "Suspicious object thrown on {street}! {description}!"
+            },
+            fire = {
+                "Someone’s spraying something flammable on {street}! {description}!",
+                "Fire extinguisher used on {street}—don’t know why! {description}!",
+                "They’ve got a gas can out on {street}. {description}!",
+                "They’re pouring fuel at {street}! {description}!",
+                "Potential arsonist on {street}! {description}!",
+                "Flammable liquid being poured near {street}! {description}!",
+                "That’s a petrol can at {street}! {description}!",
+                "I think they’re starting a fire at {street}. {description}!",
+                "They’re holding some fire hazard at {street}. {description}!",
+                "Fire-related activity spotted on {street}! {description}!"
+            },
+            fighting = {
+                "There’s a brawl on {street}! {description}!",
+                "Two people are fighting at {street}! {description}!",
+                "I just saw someone getting punched on {street}. {description}!",
+                "Big fight going down on {street}! {description}!",
+                "They're in a fistfight on {street}! {description}!",
+                "Physical altercation on {street}! {description}!",
+                "They’re beating each other up on {street}. {description}!",
+                "Some sort of street fight at {street}! {description}!",
+                "They're swinging at each other on {street}! {description}!",
+                "Crazy fight happening near {street}! {description}!"
+            },
+            carjacking = {
+                "Someone’s stealing a car on {street}! {description}!",
+                "There’s a person forcing someone out of their car at {street}! {description}!",
+                "Looks like a carjacking! They're at {street}. {description}.",
+                "Dangerous looking person jacking a car near {street}! {description}.",
+                "They're dragging someone out of their car on {street}. {description}!",
+                "This person’s armed and stealing a car on {street}. {description}!",
+                "They're taking off with someone’s vehicle at {street}. {description}.",
+                "Saw a violent carjacking happening on {street}! {description}!",
+                "They're hijacking a car at {street}. {description}.",
+                "I think they're stealing that car on {street}! {description}!"
+            },
+            playerDied = {
+                "Someone just collapsed on {street}! {description}!",
+                "There’s a body lying still on {street}! {description}!",
+                "I think someone just died at {street}. {description}.",
+                "They're not moving near {street}! {description}.",
+                "I just saw someone go down on {street}. {description}!",
+                "It looks like a person was killed at {street}. {description}!",
+                "There’s a dead body on {street}. {description}.",
+                "They were attacked and now they’re down on {street}! {description}!",
+                "Somebody’s unresponsive on {street}. {description}.",
+                "I think someone was murdered on {street}! {description}!"
+            }
+        }
+    },
     clothingConfig = {
         -- Array of clothing items that will be whitelisted from triggering 911 calls
         whiteList = {
