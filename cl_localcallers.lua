@@ -152,6 +152,30 @@ CreateThread(function()
                     "Some sort of street fight at %s! %s!",
                     "They're swinging at each other on %s! %s!",
                     "Crazy fight happening near %s! %s!"
+                },
+                carjacking = {
+                    "Someone’s stealing a car on %s! %s!",
+                    "There’s a person forcing someone out of their car at %s! %s!",
+                    "Looks like a carjacking! They're at %s. %s.",
+                    "Dangerous looking person jacking a car near %s! %s.",
+                    "They're dragging someone out of their car on %s. %s!",
+                    "This person’s armed and stealing a car on %s. %s!",
+                    "They're taking off with someone’s vehicle at %s. %s.",
+                    "Saw a violent carjacking happening on %s! %s!",
+                    "They're hijacking a car at %s. %s.",
+                    "I think they're stealing that car on %s! %s!"
+                },
+                playerDied = {
+                    "Someone just collapsed on %s! %s!",
+                    "There’s a body lying still on %s! %s!",
+                    "I think someone just died at %s. %s.",
+                    "They're not moving near %s! %s.",
+                    "I just saw someone go down on %s. %s!",
+                    "It looks like a person was killed at %s. %s!",
+                    "There’s a dead body on %s. %s.",
+                    "They were attacked and now they’re down on %s! %s!",
+                    "Somebody’s unresponsive on %s. %s.",
+                    "I think someone was murdered on %s! %s!"
                 }
             }
 
@@ -275,7 +299,6 @@ CreateThread(function()
                 if IsPedArmed(ped, 7) then
                     return "pistol"
                 end
-
                 return "fighting"  -- if unarmed but in melee, or unknown scenario
             end
 
@@ -389,8 +412,23 @@ CreateThread(function()
 
                 return false
             end
+
+            function isInWhitelistedZone(coords, callType)
+                for _, zone in ipairs(pluginConfig.whitelistZones) do
+                    if #(coords - zone.center) <= zone.radius then
+                        for _, allowedType in ipairs(zone.whitelistTypes) do
+                            if allowedType == callType then
+                                return false -- this call type *is allowed* in zone, so don't skip it
+                            end
+                        end
+                        return true -- call type NOT in whitelistTypes, suppress it
+                    end
+                end
+                return false -- not in any zone
+            end
+
             -- Main function to have AI call 911
-            function aiCall911(aiPed, suspectPed)
+            function aiCall911(aiPed, suspectPed, type)
                 if activeCalls[aiPed] then
                     return
                 end
@@ -402,15 +440,23 @@ CreateThread(function()
                 -- Move the AI close to the suspect, then play the call emote
                 TaskGoToEntity(aiPed, suspectPed, -1, 10.0, 2.0, 0, 0)
                 Wait(2000)
-
                 local phone = playCallEmote(aiPed)
 
                 local startTime = GetGameTimer()
-                local duration = 30000  -- 30 seconds total
+                local duration = pluginConfig.callTimers.gun * 1000
                 local interval = 500
                 local elapsed = 0
                 local callAborted = false
-
+                if type == "carjacking" then
+                    -- If this is a carjacking, we want to shorten the call duration
+                    duration = pluginConfig.callTimers.carJacking * 1000
+                    fullMessage = getRandomCallMessage('carjacking', street, playerDesc)
+                end
+                if type == "playerDied" then
+                    -- If this is a player death, we want to shorten the call duration
+                    duration = pluginConfig.callTimers.death * 1000
+                    fullMessage = getRandomCallMessage('playerDied', street, playerDesc)
+                end
                 CreateThread(function()
                     while elapsed < duration do
                         if not DoesEntityExist(aiPed) or IsEntityDead(aiPed) then
@@ -420,9 +466,7 @@ CreateThread(function()
                         Wait(interval)
                         elapsed = GetGameTimer() - startTime
                     end
-
                     stopCallEmote(aiPed, phone)
-
                     -- How much of the 30 s did we actually run?
                     local percent = math.min(elapsed / duration, 1.0)
                     local cutoff = math.floor(#fullMessage * percent)
@@ -434,6 +478,25 @@ CreateThread(function()
                 end)
             end
 
+            local QBCore = nil
+            local hasQBCore = false
+
+            -- Safely attempt to get QBCore
+            CreateThread(function()
+                local success, core = pcall(function()
+                    return exports['qb-core']:GetCoreObject()
+                end)
+
+                if success and core then
+                    QBCore = core
+                    hasQBCore = true
+                    debugLog("QBCore detected.")
+                else
+                    debugLog("QBCore not found. Continuing without it.")
+                end
+            end)
+
+            local wasDead = false
             -- Continuously watch for “playerPed” committing a crime in front of other peds
             CreateThread(function()
                 while true do
@@ -466,8 +529,36 @@ CreateThread(function()
                     debugLog("Ignore Suspect: " .. tostring(ignoreSuspect))
                     debugLog("Someone Calling: " .. tostring(someoneCalling))
                     debugLog("Active Calls: " .. tostring(activeCalls))
+
+                    -- Check for player death
+                    local playerIsDead = IsEntityDead(playerPed)
+
+                    if hasQBCore then
+                        local success, playerData = pcall(function()
+                            return QBCore.Functions.GetPlayerData()
+                        end)
+                        if success and playerData and playerData.metadata and playerData.metadata["isdead"] == true then
+                            playerIsDead = true
+                        end
+                    end
+                    debugLog("Player is dead: " .. tostring(playerIsDead))
+                    local inWhiteListZoneDeath = isInWhitelistedZone(playerCoords, "death")
+                    local inWhiteListZoneGun = isInWhitelistedZone(playerCoords, "gun")
+                    local inWhiteListZoneCarJacking = isInWhitelistedZone(playerCoords, "carjacking")
+                    debugLog("In Whitelist Zone (Death): " .. tostring(inWhiteListZoneDeath))
+                    debugLog("In Whitelist Zone (Gun): " .. tostring(inWhiteListZoneGun))
+                    debugLog("In Whitelist Zone (Carjacking): " .. tostring(inWhiteListZoneCarJacking))
+                    if pluginConfig.callTypes.death and (not inWhiteListZoneDeath) and playerIsDead and not wasDead and not someoneCalling and cooldownOK then
+                        wasDead = true
+                        if #nearbyPeds > 0 then
+                            debugLog("AI Ped calling 911 for player death")
+                            aiCall911(nearbyPeds[1], playerPed, "playerDied")
+                        end
+                    elseif not playerIsDead then
+                        wasDead = false
+                    end
                     -- If nobody is mid-call, and the player is actively “criminal,” have each nearby ped call 911
-                    if (not someoneCalling) and cooldownOK and (not ignoreSuspect) then
+                    if pluginConfig.callTypes.gun and (not inWhiteListZoneGun) and (not someoneCalling) and cooldownOK and (not ignoreSuspect) then
                         -- If the player is armed, shooting, or in melee, have each nearby ped call 911
                         local isArmed = IsPedArmed(playerPed, 7)
                         local isShooting = IsPedShooting(playerPed)
@@ -480,11 +571,14 @@ CreateThread(function()
                             debugLog("AI Ped calling 911 for player crime")
                             aiCall911(nearbyPeds[1], playerPed)
                         end
+                        if pluginConfig.callTypes.carJacking and (not inWhiteListZoneCarJacking) and (IsPedTryingToEnterALockedVehicle(playerPed) or IsPedJacking(playerPed)) then
+                            aiCall911(nearbyPeds[1], playerPed, "carjacking")
+                        end
                     end
+                    -- Car jacking detection: if the player is in a vehicle and nearby peds see it
                     Wait(3000)
                 end
             end)
-
             -- Helper: iterate all peds in the world
             function EnumeratePeds()
                 return coroutine.wrap(function()
