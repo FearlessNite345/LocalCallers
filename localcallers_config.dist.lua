@@ -38,7 +38,7 @@
     language = {
         -- Language configuration
         callerStates = "Caller States: ",
-        callDropped = " - Call was dropped mid statement. Could not reach the caller or verify the situation. Responding units proceed with caution.",
+        callDropped = "...\n\nCall was dropped mid statement. Could not reach the caller or verify the situation. Responding units proceed with caution.",
         unknownItem = "Unknown Item",
         unknownColor = "Unknown Color",
         unknown = "Unknown",

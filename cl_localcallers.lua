@@ -280,10 +280,6 @@ CreateThread(function()
 
             -- Main function to have AI call 911
             function aiCall911(aiPed, suspectPed, type)
-                if activeCalls[aiPed] then
-                    return
-                end
-                activeCalls[aiPed] = true
                 local playerDesc = getPlayerDescription(suspectPed)
                 local street = getStreetName(GetEntityCoords(suspectPed))
                 local actionType = detectActionType(suspectPed)
@@ -325,9 +321,10 @@ CreateThread(function()
                     if callAborted then
                         debugLog("AI Call Aborted: " .. partialMessage)
                         partialMessage = partialMessage .. pluginConfig.language.callDropped
+                        Wait(5000)
                     end
                     debugLog("AI Call Message: " .. partialMessage)
-                    TriggerServerEvent('SonoranCAD::callcommands:SendCallApi', true, pluginConfig.language.caller, street, pluginConfig.language.callerStates .. partialMessage, PlayerPedId(), false, true)
+                    TriggerServerEvent('SonoranCAD::localcallers:Call911', street, pluginConfig.language.callerStates .. partialMessage, GetEntityCoords(aiPed))
                     lastCallEndTime = GetGameTimer()
                     activeCalls[aiPed] = nil
                 end)
@@ -383,7 +380,7 @@ CreateThread(function()
                     debugLog("Cooldown OK: " .. tostring(cooldownOK))
                     debugLog("Ignore Suspect: " .. tostring(ignoreSuspect))
                     debugLog("Someone Calling: " .. tostring(someoneCalling))
-                    debugLog("Active Calls: " .. tostring(activeCalls))
+                    debugLog("Active Calls: " .. json.encode(activeCalls))
 
                     -- Check for player death
                     local playerIsDead = IsEntityDead(playerPed)
@@ -403,10 +400,14 @@ CreateThread(function()
                     debugLog("In Whitelist Zone (Death): " .. tostring(inWhiteListZoneDeath))
                     debugLog("In Whitelist Zone (Gun): " .. tostring(inWhiteListZoneGun))
                     debugLog("In Whitelist Zone (Carjacking): " .. tostring(inWhiteListZoneCarJacking))
-                    if pluginConfig.callTypes.death and (not inWhiteListZoneDeath) and playerIsDead and not wasDead and not someoneCalling and cooldownOK then
+                    if pluginConfig.callTypes.death and #activeCalls == 0 and (not inWhiteListZoneDeath) and playerIsDead and not wasDead and not someoneCalling and cooldownOK then
                         wasDead = true
                         if #nearbyPeds > 0 then
                             debugLog("AI Ped calling 911 for player death")
+                            if activeCalls[nearbyPeds[1]] then
+                                return
+                            end
+                            activeCalls[nearbyPeds[1]] = true
                             aiCall911(nearbyPeds[1], playerPed, "playerDied")
                         end
                     elseif not playerIsDead then
@@ -422,11 +423,19 @@ CreateThread(function()
                         debugLog("Is Shooting: " .. tostring(isShooting))
                         debugLog("Is Melee: " .. tostring(isMelee))
                         -- If any of these conditions are true, have the first nearby ped call 911
-                        if (isArmed or isShooting or isMelee) and #nearbyPeds > 0 then
+                        if (isArmed or isShooting or isMelee) and #nearbyPeds > 0 and #activeCalls == 0 then
                             debugLog("AI Ped calling 911 for player crime")
+                            if activeCalls[nearbyPeds[1]] then
+                                return
+                            end
+                            activeCalls[nearbyPeds[1]] = true
                             aiCall911(nearbyPeds[1], playerPed)
                         end
-                        if pluginConfig.callTypes.carJacking and (not inWhiteListZoneCarJacking) and (IsPedTryingToEnterALockedVehicle(playerPed) or IsPedJacking(playerPed)) then
+                        if pluginConfig.callTypes.carJacking and (not inWhiteListZoneCarJacking) and #activeCalls == 0 and (IsPedTryingToEnterALockedVehicle(playerPed) or IsPedJacking(playerPed)) then
+                            if activeCalls[nearbyPeds[1]] then
+                                return
+                            end
+                            activeCalls[nearbyPeds[1]] = true
                             aiCall911(nearbyPeds[1], playerPed, "carjacking")
                         end
                     end
