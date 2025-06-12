@@ -8,6 +8,9 @@
 CreateThread(function() Config.LoadPlugin("localcallers", function(pluginConfig)
     if pluginConfig.enabled then
         RegisterNetEvent("SonoranCAD::localcallers:Call911", function(street, message, coords)
+            if street == '' then
+                street = 'Unknown'
+            end
             local postal = "Unknown"
             if isPluginLoaded("postals") then
                 postal = getPostalFromVector3(coords)

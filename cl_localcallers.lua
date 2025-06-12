@@ -358,7 +358,7 @@ CreateThread(function()
 
                     -- Gather any nearby non-player peds
                     for ped in EnumeratePeds() do
-                        if ped ~= playerPed and not IsPedAPlayer(ped) and not IsPedDeadOrDying(ped) then
+                        if ped ~= playerPed and not IsPedAPlayer(ped) and not IsPedDeadOrDying(ped) and IsPedHuman(ped) then
                             local pedCoords = GetEntityCoords(ped)
                             if #(playerCoords - pedCoords) < 50.0 and HasEntityClearLosToEntity(ped, playerPed, 17) then
                                 table.insert(nearbyPeds, ped)
