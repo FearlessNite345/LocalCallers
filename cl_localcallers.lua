@@ -404,11 +404,10 @@ CreateThread(function()
                         wasDead = true
                         if #nearbyPeds > 0 then
                             debugLog("AI Ped calling 911 for player death")
-                            if activeCalls[nearbyPeds[1]] then
-                                return
+                            if not activeCalls[nearbyPeds[1]] or activeCalls[nearbyPeds[1]] == nil then
+                                activeCalls[nearbyPeds[1]] = true
+                                aiCall911(nearbyPeds[1], playerPed, "playerDied")
                             end
-                            activeCalls[nearbyPeds[1]] = true
-                            aiCall911(nearbyPeds[1], playerPed, "playerDied")
                         end
                     elseif not playerIsDead then
                         wasDead = false
@@ -425,18 +424,16 @@ CreateThread(function()
                         -- If any of these conditions are true, have the first nearby ped call 911
                         if (isArmed or isShooting or isMelee) and #nearbyPeds > 0 and #activeCalls == 0 then
                             debugLog("AI Ped calling 911 for player crime")
-                            if activeCalls[nearbyPeds[1]] then
-                                return
+                            if not activeCalls[nearbyPeds[1]] or activeCalls[nearbyPeds[1]] == nil then
+                                activeCalls[nearbyPeds[1]] = true
+                                aiCall911(nearbyPeds[1], playerPed)
                             end
-                            activeCalls[nearbyPeds[1]] = true
-                            aiCall911(nearbyPeds[1], playerPed)
                         end
                         if pluginConfig.callTypes.carJacking and (not inWhiteListZoneCarJacking) and #activeCalls == 0 and (IsPedTryingToEnterALockedVehicle(playerPed) or IsPedJacking(playerPed)) then
-                            if activeCalls[nearbyPeds[1]] then
-                                return
+                            if not activeCalls[nearbyPeds[1]] or activeCalls[nearbyPeds[1]] == nil then
+                                activeCalls[nearbyPeds[1]] = true
+                                aiCall911(nearbyPeds[1], playerPed, "carjacking")
                             end
-                            activeCalls[nearbyPeds[1]] = true
-                            aiCall911(nearbyPeds[1], playerPed, "carjacking")
                         end
                     end
                     -- Car jacking detection: if the player is in a vehicle and nearby peds see it
