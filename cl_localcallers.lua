@@ -161,41 +161,48 @@ CreateThread(function()
                     return pluginConfig.language.unknown
                 end
 
-                -- 1) Gender
-                local gender = IsPedMale(ped) and pluginConfig.language.male or pluginConfig.language.female
-                -- 2) Top (component 8)
+                -- 1) Determine gender
+                local isMale    = IsPedMale(ped)
+                local genderKey = isMale and "male" or "female"
+                local genderStr = isMale and pluginConfig.language.male or pluginConfig.language.female
+
+                -- 2) Grab the gendered clothing table
+                local clothes = pluginConfig.clothingConfig[genderKey]
+
+                -- 3) Top (component 8)
                 local topDraw = GetPedDrawableVariation(ped, 8)
                 local topTex  = GetPedTextureVariation(ped,    8)
-                local topName, topColor = lookupClothing(pluginConfig.clothingConfig.top, topDraw, topTex)
+                local topName,   topColor   = lookupClothing(clothes.top,   topDraw, topTex)
 
-                -- 3) Torso/Jacket (component 3)
+                -- 4) Torso (component 3)
                 local torsoDraw = GetPedDrawableVariation(ped, 3)
                 local torsoTex  = GetPedTextureVariation(ped,    3)
-                local torsoName, torsoColor = lookupClothing(pluginConfig.clothingConfig.torso, torsoDraw, torsoTex)
+                local torsoName, torsoColor = lookupClothing(clothes.torso, torsoDraw, torsoTex)
 
-                -- 4) Pants (component 4)
+                -- 5) Pants (component 4)
                 local pantsDraw = GetPedDrawableVariation(ped, 4)
                 local pantsTex  = GetPedTextureVariation(ped,    4)
-                local pantsName, pantsColor = lookupClothing(pluginConfig.clothingConfig.pants, pantsDraw, pantsTex)
+                local pantsName, pantsColor = lookupClothing(clothes.pants, pantsDraw, pantsTex)
 
-                -- 5) Shoes (component 6)
+                -- 6) Shoes (component 6)
                 local shoesDraw = GetPedDrawableVariation(ped, 6)
                 local shoesTex  = GetPedTextureVariation(ped,    6)
-                local shoesName, shoesColor = lookupClothing(pluginConfig.clothingConfig.shoes, shoesDraw, shoesTex)
+                local shoesName, shoesColor = lookupClothing(clothes.shoes, shoesDraw, shoesTex)
 
-                -- (Optional) Hat / Glasses / Accessories could be added here similarly:
-                local hatProp  = GetPedPropIndex(ped, 0)
-                local hatTex   = GetPedPropTextureIndex(ped, 0)
-                local hatName, hatColor = lookupClothing(pluginConfig.clothingConfig.hat, hatProp, hatTex)
+                -- 7) Hat/Prop (prop 0)
+                local hatProp = GetPedPropIndex(ped, 0)
+                local hatTex  = GetPedPropTextureIndex(ped, 0)
+                local hatName,  hatColor  = lookupClothing(clothes.hat,   hatProp, hatTex)
 
-                -- Build the final description string
+                -- 8) Build description
                 local desc = string.format(
-                    "%s, %s (%s), %s (%s), %s (%s), %s (%s)",
-                    gender,
+                    "%s, %s (%s), %s (%s), %s (%s), %s (%s), %s (%s)",
+                    genderStr,
                     topName,   topColor,
                     torsoName, torsoColor,
                     pantsName, pantsColor,
-                    shoesName, shoesColor
+                    shoesName, shoesColor,
+                    hatName,   hatColor
                 )
 
                 return desc
@@ -216,51 +223,71 @@ CreateThread(function()
                     :gsub("{street}", street)
                     :gsub("{description}", description)
             end
+            -- Helper function to get the ped's gender
+            local function getPedGender(ped)
+                local t = GetPedType(ped)
+                if t == 4 then
+                    return "male"
+                elseif t == 5 then
+                    return "female"
+                end
+                return "unknown"
+            end
             -- Helper function: returns true if `ped` is wearing ANY of the whitelisted items
             local function isPedWhitelisted(ped)
-                local pedModel = GetEntityModel(ped)
+                local pedModel  = GetEntityModel(ped)
+                local pedGender = getPedGender(ped)
 
                 for _, entry in ipairs(pluginConfig.clothingConfig.whiteList) do
-                    local pedHash = entry.ped and GetHashKey(entry.ped)
-
-                    -- 1. Ped model-wide whitelist (ignore clothes)
-                    if entry.ped and not entry.component and pedModel == pedHash then
-                        debugLog("Ped model fully whitelisted: " .. entry.ped)
-                        return true
+                    -- 0) skip any entry whose gender doesn’t match
+                    if entry.gender and entry.gender ~= pedGender then
+                        goto continue
                     end
 
-                    -- 2. Clothing whitelist (applies to all peds)
+                    -- 1) full‐ped model whitelist (ignore clothes)
+                    if entry.ped and not entry.component then
+                        if pedModel == GetHashKey(entry.ped) then
+                            debugLog("Ped model fully whitelisted: " .. entry.ped)
+                            return true
+                        end
+                    end
+
+                    -- 2) global clothing whitelist (all peds)
                     if entry.component and not entry.ped then
                         local comp = entry.component
                         local draw = GetPedDrawableVariation(ped, comp)
-                        local tex = GetPedTextureVariation(ped, comp)
-
+                        local tex  = GetPedTextureVariation(ped, comp)
                         if draw == entry.drawable then
                             for _, allowedTex in ipairs(entry.textures) do
                                 if tex == allowedTex then
-                                    debugLog("Global clothing match: comp " .. comp .. " drawable " .. draw .. " texture " .. tex)
+                                    debugLog(("Global clothing match: comp %d draw %d tex %d"):format(comp,draw,tex))
                                     return true
                                 end
                             end
                         end
                     end
 
-                    -- 3. Clothing whitelist for specific ped models
-                    if entry.component and entry.ped and pedModel == pedHash then
-                        local comp = entry.component
-                        local draw = GetPedDrawableVariation(ped, comp)
-                        local tex = GetPedTextureVariation(ped, comp)
-
-                        if draw == entry.drawable then
-                            for _, allowedTex in ipairs(entry.textures) do
-                                if tex == allowedTex then
-                                    debugLog("Ped-specific clothing match for " .. entry.ped .. ": comp " .. comp .. " drawable " .. draw .. " texture " .. tex)
-                                    return true
+                    -- 3) ped‐specific clothing whitelist
+                    if entry.ped and entry.component then
+                        if pedModel == GetHashKey(entry.ped) then
+                            local comp = entry.component
+                            local draw = GetPedDrawableVariation(ped, comp)
+                            local tex  = GetPedTextureVariation(ped, comp)
+                            if draw == entry.drawable then
+                                for _, allowedTex in ipairs(entry.textures) do
+                                    if tex == allowedTex then
+                                        debugLog(("Ped-specific clothing match for %s: comp %d draw %d tex %d")
+                                            :format(entry.ped,comp,draw,tex))
+                                        return true
+                                    end
                                 end
                             end
                         end
                     end
+
+                    ::continue::
                 end
+
                 return false
             end
 
@@ -285,7 +312,11 @@ CreateThread(function()
                 local actionType = detectActionType(suspectPed)
                 local fullMessage = getRandomCallMessage(actionType, street, playerDesc)
                 -- Move the AI close to the suspect, then play the call emote
-                TaskGoToEntity(aiPed, suspectPed, -1, 10.0, 2.0, 0, 0)
+                if not pluginConfig.localRunTime or pluginConfig.localRunTime < 0 or pluginConfig.localRunTime == nil then
+                    pluginConfig.localRunTime = 0 -- default time if not set
+                end
+                pluginConfig.localRunTime = pluginConfig.localRunTime * 1000
+                TaskGoToEntity(aiPed, suspectPed, pluginConfig.localRunTime, 10.0, 2.0, 0, 0)
                 Wait(2000)
                 local phone = playCallEmote(aiPed)
 
