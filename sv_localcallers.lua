@@ -29,6 +29,9 @@ CreateThread(function() Config.LoadPlugin("localcallers", function(pluginConfig)
                     ['postal'] = postal
                 }
             }
+            if pluginConfig.clearRecordsAfter ~= 0 then
+                data.deleteAfterMinutes = pluginConfig.clearRecordsAfter
+            end
             if LocationCache[source] ~= nil then
                 data['metaData']['x'] = LocationCache[source].coordinates.x
                 data['metaData']['y'] = LocationCache[source].coordinates.y
