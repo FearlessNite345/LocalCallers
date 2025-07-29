@@ -9,7 +9,7 @@ local config = {
     enabled = false,
     pluginName = "localcallers", -- name your plugin here
     pluginAuthor = "SonoranCAD", -- author
-    configVersion = "1.1",
+    configVersion = "1.2",
     callCoolDown = 60,           -- Time in between calls in seconds
     callTypes = {
         gun = true,              -- Enable or disable gun-related calls
@@ -222,8 +222,8 @@ local config = {
     weaponConfig = {
         weaponResponses = {
             [`WEAPON_CARBINERIFLE`] = {
-                "Shots fired on {street}! Suspect has a Carbine Rifle! {description}",
-                "Gunfire reported on {street} — possibly a Carbine Rifle. {description}",
+                "Some person is here on {street}! Suspect has a Carbine Rifle! {description}",
+                "There's someone with a rifle on {street} — possibly a Carbine Rifle. {description}",
                 "There's someone with a Carbine Rifle at {street}! {description}"
             }
         }
