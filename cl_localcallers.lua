@@ -7,13 +7,14 @@
 CreateThread(function()
     Config.LoadPlugin("localcallers", function(pluginConfig)
         if pluginConfig.enabled then
-            local lastCallEndTime  = 0    -- tracks when the most recent call finished
-            local activeCalls = {}
+            local lastCallEndTime = 0 -- tracks when the most recent call finished
+            local activeCalls     = {}
             -- Get the street name at these coords
             function getStreetName(coords)
                 local streetHash, _ = GetStreetNameAtCoord(coords.x, coords.y, coords.z)
                 return GetStreetNameFromHashKey(streetHash)
             end
+
             -- Play the phone-call emote + attach a phone prop
             function playCallEmote(ped)
                 RequestAnimDict("cellphone@")
@@ -118,6 +119,14 @@ CreateThread(function()
 
                 -- Otherwise look at the weapon they currently have selected
                 local weapon = GetSelectedPedWeapon(ped)
+
+                local customWeaponResponses = pluginConfig.weaponConfig.weaponResponses and
+                    pluginConfig.weaponConfig.weaponResponses[weapon]
+
+                if customWeaponResponses and #customWeaponResponses > 0 then
+                    return weapon
+                end
+
                 local cat = getWeaponCategory(weapon)
                 if cat ~= "unknown" then
                     return cat
@@ -127,7 +136,7 @@ CreateThread(function()
                 if IsPedArmed(ped, 7) then
                     return "pistol"
                 end
-                return "fighting"  -- if unarmed but in melee, or unknown scenario
+                return "fighting" -- if unarmed but in melee, or unknown scenario
             end
 
             -- Safely look up a component’s “name” and “color” from pluginConfig.clothingConfig.
@@ -162,47 +171,47 @@ CreateThread(function()
                 end
 
                 -- 1) Determine gender
-                local isMale    = IsPedMale(ped)
-                local genderKey = isMale and "male" or "female"
-                local genderStr = isMale and pluginConfig.language.male or pluginConfig.language.female
+                local isMale                = IsPedMale(ped)
+                local genderKey             = isMale and "male" or "female"
+                local genderStr             = isMale and pluginConfig.language.male or pluginConfig.language.female
 
                 -- 2) Grab the gendered clothing table
-                local clothes = pluginConfig.clothingConfig[genderKey]
+                local clothes               = pluginConfig.clothingConfig[genderKey]
 
                 -- 3) Top (component 8)
-                local topDraw = GetPedDrawableVariation(ped, 8)
-                local topTex  = GetPedTextureVariation(ped,    8)
-                local topName,   topColor   = lookupClothing(clothes.top,   topDraw, topTex)
+                local topDraw               = GetPedDrawableVariation(ped, 8)
+                local topTex                = GetPedTextureVariation(ped, 8)
+                local topName, topColor     = lookupClothing(clothes.top, topDraw, topTex)
 
                 -- 4) Torso (component 3)
-                local torsoDraw = GetPedDrawableVariation(ped, 3)
-                local torsoTex  = GetPedTextureVariation(ped,    3)
+                local torsoDraw             = GetPedDrawableVariation(ped, 3)
+                local torsoTex              = GetPedTextureVariation(ped, 3)
                 local torsoName, torsoColor = lookupClothing(clothes.torso, torsoDraw, torsoTex)
 
                 -- 5) Pants (component 4)
-                local pantsDraw = GetPedDrawableVariation(ped, 4)
-                local pantsTex  = GetPedTextureVariation(ped,    4)
+                local pantsDraw             = GetPedDrawableVariation(ped, 4)
+                local pantsTex              = GetPedTextureVariation(ped, 4)
                 local pantsName, pantsColor = lookupClothing(clothes.pants, pantsDraw, pantsTex)
 
                 -- 6) Shoes (component 6)
-                local shoesDraw = GetPedDrawableVariation(ped, 6)
-                local shoesTex  = GetPedTextureVariation(ped,    6)
+                local shoesDraw             = GetPedDrawableVariation(ped, 6)
+                local shoesTex              = GetPedTextureVariation(ped, 6)
                 local shoesName, shoesColor = lookupClothing(clothes.shoes, shoesDraw, shoesTex)
 
                 -- 7) Hat/Prop (prop 0)
-                local hatProp = GetPedPropIndex(ped, 0)
-                local hatTex  = GetPedPropTextureIndex(ped, 0)
-                local hatName,  hatColor  = lookupClothing(clothes.hat,   hatProp, hatTex)
+                local hatProp               = GetPedPropIndex(ped, 0)
+                local hatTex                = GetPedPropTextureIndex(ped, 0)
+                local hatName, hatColor     = lookupClothing(clothes.hat, hatProp, hatTex)
 
                 -- 8) Build description
-                local desc = string.format(
+                local desc                  = string.format(
                     "%s, %s (%s), %s (%s), %s (%s), %s (%s), %s (%s)",
                     genderStr,
-                    topName,   topColor,
+                    topName, topColor,
                     torsoName, torsoColor,
                     pantsName, pantsColor,
                     shoesName, shoesColor,
-                    hatName,   hatColor
+                    hatName, hatColor
                 )
 
                 return desc
@@ -210,7 +219,8 @@ CreateThread(function()
 
             -- Pick a random template, fill in street + description
             function getRandomCallMessage(actionType, street, description)
-                local templates = pluginConfig.language.callTemplates[actionType]
+                local templates = pluginConfig.language.callTemplates[actionType] or
+                pluginConfig.weaponConfig.weaponResponses[actionType]
                 if not templates then
                     -- Fallback if we have no entry for this actionType
                     return ("911! I saw someone acting suspicious on {street}. {description}")
@@ -223,6 +233,7 @@ CreateThread(function()
                     :gsub("{street}", street)
                     :gsub("{description}", description)
             end
+
             -- Helper function to get the ped's gender
             local function getPedGender(ped)
                 local t = GetPedType(ped)
@@ -260,7 +271,7 @@ CreateThread(function()
                         if draw == entry.drawable then
                             for _, allowedTex in ipairs(entry.textures) do
                                 if tex == allowedTex then
-                                    debugLog(("Global clothing match: comp %d draw %d tex %d"):format(comp,draw,tex))
+                                    debugLog(("Global clothing match: comp %d draw %d tex %d"):format(comp, draw, tex))
                                     return true
                                 end
                             end
@@ -277,7 +288,7 @@ CreateThread(function()
                                 for _, allowedTex in ipairs(entry.textures) do
                                     if tex == allowedTex then
                                         debugLog(("Ped-specific clothing match for %s: comp %d draw %d tex %d")
-                                            :format(entry.ped,comp,draw,tex))
+                                            :format(entry.ped, comp, draw, tex))
                                         return true
                                     end
                                 end
@@ -355,7 +366,8 @@ CreateThread(function()
                         Wait(5000)
                     end
                     debugLog("AI Call Message: " .. partialMessage)
-                    TriggerServerEvent('SonoranCAD::localcallers:Call911', street, pluginConfig.language.callerStates .. partialMessage, GetEntityCoords(aiPed))
+                    TriggerServerEvent('SonoranCAD::localcallers:Call911', street,
+                        pluginConfig.language.callerStates .. partialMessage, GetEntityCoords(aiPed))
                     lastCallEndTime = GetGameTimer()
                     activeCalls[aiPed] = nil
                 end)
