@@ -11,6 +11,7 @@ local config = {
     pluginAuthor = "SonoranCAD", -- author
     configVersion = "1.2",
     callCoolDown = 60,           -- Time in between calls in seconds
+    clearRecordsAfter = 30,      -- Time in minutes to clear records after a call is made | 0 will disable this feature
     callTypes = {
         gun = true,              -- Enable or disable gun-related calls
         carJacking = true,       -- Enable or disable carjacking calls
